@@ -9,10 +9,18 @@ namespace LocalLingua.Overlay;
 public partial class MainWindow : Window {
     private readonly CancellationTokenSource _stop = new();
     private readonly Dictionary<string,int> _latest = new();
+    private readonly HashSet<string> _final = new();
     public MainWindow() {
         InitializeComponent();
         Loaded += (_,_) => _ = ConnectLoopAsync();
         Closed += (_,_) => _stop.Cancel();
+        PreviewKeyDown += (_, e) => {
+            if (e.Key == Key.Escape) Close();
+            if (e.Key == Key.Add || e.Key == Key.OemPlus) VietnameseText.FontSize = Math.Min(48, VietnameseText.FontSize + 2);
+            if (e.Key == Key.Subtract || e.Key == Key.OemMinus) VietnameseText.FontSize = Math.Max(16, VietnameseText.FontSize - 2);
+            if (e.Key == Key.Up && Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) Opacity = Math.Min(1, Opacity + 0.05);
+            if (e.Key == Key.Down && Keyboard.Modifiers.HasFlag(ModifierKeys.Control)) Opacity = Math.Max(0.35, Opacity - 0.05);
+        };
     }
     private void Close_Click(object sender, RoutedEventArgs e) => Close();
     private void DragBar_MouseLeftButtonDown(object sender, MouseButtonEventArgs e) {
@@ -21,18 +29,20 @@ public partial class MainWindow : Window {
     private async Task ConnectLoopAsync() {
         while (!_stop.IsCancellationRequested) {
             using var socket = new ClientWebSocket();
+            socket.Options.SetRequestHeader("Authorization", "Bearer " + Environment.GetEnvironmentVariable("LOCALLINGUA_TOKEN"));
             try {
                 await socket.ConnectAsync(new Uri("ws://127.0.0.1:8765/ws/events"), _stop.Token);
                 Dispatcher.Invoke(() => StatusText.Text = "● Connected · English → Vietnamese");
                 var buffer = new byte[64 * 1024];
-                var json = new StringBuilder();
+                using var json = new System.IO.MemoryStream();
                 while (socket.State == WebSocketState.Open && !_stop.IsCancellationRequested) {
                     var r = await socket.ReceiveAsync(buffer, _stop.Token);
                     if (r.MessageType == WebSocketMessageType.Close) break;
                     if (r.MessageType != WebSocketMessageType.Text) continue;
-                    json.Append(Encoding.UTF8.GetString(buffer,0,r.Count));
+                    json.Write(buffer,0,r.Count);
+                    if (json.Length > 262144) throw new InvalidOperationException("Event too large");
                     if (!r.EndOfMessage) continue;
-                    string message = json.ToString(); json.Clear();
+                    string message = Encoding.UTF8.GetString(json.ToArray()); json.SetLength(0);
                     using var doc = JsonDocument.Parse(message);
                     var root=doc.RootElement;
                     if (!root.TryGetProperty("type",out var typ)) continue;
@@ -41,8 +51,12 @@ public partial class MainWindow : Window {
                         if (!phase.StartsWith("translation")) continue;
                         string id=root.GetProperty("utterance_id").GetString() ?? "";
                         int revision=root.GetProperty("revision").GetInt32();
-                        if (_latest.TryGetValue(id,out var seen) && revision<=seen) continue;
+                        if (_final.Contains(id) || _latest.TryGetValue(id,out var seen) && revision<=seen) continue;
                         _latest[id]=revision;
+                        if (phase.EndsWith("final")) _final.Add(id);
+                        while (_latest.Count > 140) {
+                            var oldest = _latest.Keys.First(); _latest.Remove(oldest); _final.Remove(oldest);
+                        }
                         string vi=root.GetProperty("vietnamese").GetString() ?? "";
                         string en=root.GetProperty("english").GetString() ?? "";
                         Dispatcher.Invoke(()=>{

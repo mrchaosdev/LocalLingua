@@ -23,3 +23,8 @@ Native process-tree helper and AudioHost supervision implemented. See M2-ISOLATI
 Implemented independent capture/ASR/translation workers, 800ms audio work bound, bounded final FIFO queues with explicit overflow/pause, latest-wins partial slots, two-hypothesis stable prefix, generation invalidation on stop, VAD onset/hangover, forced segmentation and source-silence flush. Added optional local Silero ONNX VAD (512-sample windows), bounded P50/P95 service-time samples and backend final-age timings.
 
 Added regression cases for immutable finals per language, slow subscriber gap/replay, silence, and stop during translation. Tests NOT RUN. Existing resampler test updated to flush streaming filter tail. No 30-minute run or GPU measurement. Backend final_age_ms excludes device/capture/UI synchronization; it is NOT end-to-end latency.
+
+## M4
+Replaced mock navigation and custom dashboard controls with verified official Astryx components (Button, TextInput, Text, Heading, VStack/HStack). Added Vietnamese labels, dark/light mode, audio meter, service-time diagnostics, caption size, Ctrl+Enter shortcut, explicit TXT export and RAM-only glossary hints. Web auth bridge prepared for M5. Overlay: immutable finals, bounded revision state, correct fragmented UTF-8 handling, size +/- and Ctrl+Up/Down opacity, Esc close, PerMonitorV2 manifest.
+
+Not run: browser rendering, Astryx built-asset doctor, screenshot review, accessibility/keyboard, light/dark contrast, overlay multi-monitor / 125-150% DPI. No UI acceptance claim.

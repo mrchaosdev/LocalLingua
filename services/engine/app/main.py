@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from typing import Literal
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from .audio import AudioFormat, AudioNormalizer
 from .config import Settings
 from .events import EventHub, caption
@@ -51,6 +51,19 @@ app.add_middleware(CORSMiddleware,
 
 class ModeInput(BaseModel):
     mode: Literal['start','pause','stop']
+
+class GlossaryInput(BaseModel):
+    term: str = Field(min_length=1, max_length=80)
+    meaning: str = Field(min_length=1, max_length=160)
+
+@app.post('/api/glossary')
+async def glossary(body: GlossaryInput):
+    if len(translator.glossary) >= 100 and body.term not in translator.glossary:
+        raise HTTPException(409, 'Session glossary limit reached')
+    if not body.term.strip() or not body.meaning.strip():
+        raise HTTPException(422, 'Empty glossary entry')
+    translator.glossary[body.term.strip()] = body.meaning.strip()
+    return {'ok': True, 'entries': len(translator.glossary)}
 
 def get_status():
     return {
