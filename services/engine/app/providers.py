@@ -53,6 +53,7 @@ class Translator:
     @staticmethod
     def clean(text: str) -> str:
         text = re.sub(r"<think>.*?</think>", "", text, flags=re.S|re.I)
+        text = re.sub(r"<think>.*$", "", text, flags=re.S|re.I)
         text = re.sub(r"^\s*(Bản dịch|Vietnamese translation|Translation)\s*[:：]\s*", "", text, flags=re.I)
         return text.strip().strip('"“”')
 
@@ -82,4 +83,6 @@ class Translator:
         resp.raise_for_status()
         result = resp.json().get('message',{}).get('content','')
         if not result.strip(): raise RuntimeError('Translator returned empty content')
-        return self.clean(result)
+        cleaned = self.clean(result)
+        if not cleaned: raise RuntimeError('Translator returned no subtitle content')
+        return cleaned

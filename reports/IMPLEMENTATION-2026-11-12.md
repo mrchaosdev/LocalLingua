@@ -18,3 +18,8 @@ Not run: audio diagnostic 10 minutes, WAV ASR, Qwen inference, CUDA/VRAM verific
 
 ## M2
 Native process-tree helper and AudioHost supervision implemented. See M2-ISOLATION-ACCEPTANCE.md. Native build, Microsoft sample proof, Discord/YouTube exclusion and restart/device tests all NOT RUN. M2 is a hard release blocker. Subsequent commits are implementation work only; no promotion through acceptance gates.
+
+## M3
+Implemented independent capture/ASR/translation workers, 800ms audio work bound, bounded final FIFO queues with explicit overflow/pause, latest-wins partial slots, two-hypothesis stable prefix, generation invalidation on stop, VAD onset/hangover, forced segmentation and source-silence flush. Added optional local Silero ONNX VAD (512-sample windows), bounded P50/P95 service-time samples and backend final-age timings.
+
+Added regression cases for immutable finals per language, slow subscriber gap/replay, silence, and stop during translation. Tests NOT RUN. Existing resampler test updated to flush streaming filter tail. No 30-minute run or GPU measurement. Backend final_age_ms excludes device/capture/UI synchronization; it is NOT end-to-end latency.

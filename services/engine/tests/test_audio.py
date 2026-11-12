@@ -13,7 +13,8 @@ def test_float32_resample():
     fmt=AudioFormat.from_message({'type':'audio.format','sample_rate':48000,'channels':1,'sample_format':'float32'})
     t=np.arange(4800,dtype=np.float32)/48000.0
     data=np.sin(2*np.pi*440*t).astype('<f4').tobytes()
-    y=AudioNormalizer(fmt).convert(data)
+    normalizer=AudioNormalizer(fmt)
+    y=np.concatenate((normalizer.convert(data),normalizer.finish()))
     assert abs(y.size-1600)<3
     assert 0.4 < rms(y)<0.9
 
