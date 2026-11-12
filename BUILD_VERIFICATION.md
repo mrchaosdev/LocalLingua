@@ -16,3 +16,20 @@ The original kit's historical test evidence is preserved in the initial Git comm
 At the owner's request, all automated/runtime acceptance tests are deferred on this laptop: pytest, browser/demo/WebSocket integration, .NET builds/GUI, C++ process capture build, real audio, GPU inference, model quality, isolation, restart/device matrix, 30-minute soak, offline/clean-PC packaging.
 
 No model downloaded, no real meeting audio captured, no GPU/VRAM or latency measurement. M0–M5 acceptance remains PENDING. See reports/IMPLEMENTATION-2026-11-12.md for changes by milestone and reports/M2-ISOLATION-ACCEPTANCE.md for the hard isolation gate.
+
+## v0.4 source-completion continuation — tests NOT RUN
+
+The owner explicitly requested finishing the remaining code without testing. Current source coverage is mapped in docs/16-COMPLETE-IMPLEMENTATION.md. No milestone runtime gate is marked passed.
+
+Executed static checks only:
+
+- `npx.cmd tsc --noEmit`: exit 0. No browser/app started, no test runner.
+- Python `ast.parse`: 28 Python files parsed, with no application imports or function execution.
+- PowerShell AST parser: all scripts parsed; setup/packaging scripts not executed.
+- `node --check scripts/collect-web-licenses.mjs`: exit 0, syntax only.
+- JSON contracts parsed and `git diff --check` reviewed.
+- Official Astryx Selector/Switch props read via installed CLI. Ollama local-only/preload/show behavior checked against primary API docs/source.
+
+NOT executed: pytest, native/.NET compilation, GUI launch, AI inference, model download/import, capture, installer packaging or 30-minute benchmark. Earlier web build/Astryx doctor results above belong to the earlier implementation; they are not new runtime verification for this continuation.
+
+The current laptop still lacks the target .NET 10/Python 3.11/GPU prerequisites established in the initial audit. Target versions were preserved. Source artifacts include a portable/installer recipe; no binary installer was produced.

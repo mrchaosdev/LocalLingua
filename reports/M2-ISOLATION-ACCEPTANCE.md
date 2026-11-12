@@ -15,6 +15,6 @@ Target PC evidence to record:
 | Output device switch | NOT RUN | recovery seconds |
 | Process lost / no system fallback | NOT RUN | |
 
-Known limits: only stable Discord.exe naming supported; Canary/PTB not selected. Packet drops currently logged on helper stderr, not synchronized capture-clock metrics. Native helper has not been built on this laptop. Hard release blocker remains open.
+Known limits: only stable Discord.exe naming supported; Canary/PTB not selected. Native packets now carry QPC/sample/sequence/drop metadata (contracts/audio-frame-v2.md). Native helper has not been built on this laptop. Hard release blocker remains open.
 
 Reference: https://github.com/microsoft/Windows-classic-samples/tree/main/Samples/ApplicationLoopback

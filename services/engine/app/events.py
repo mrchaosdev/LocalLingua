@@ -18,6 +18,7 @@ class EventHub:
         self.subscribers: set[asyncio.Queue] = set()
         self.history = OrderedDict()
         self.max_history = max_history
+        self.history_evictions = 0
 
     def subscribe(self):
         q = asyncio.Queue(maxsize=150)
@@ -36,6 +37,7 @@ class EventHub:
             self.history[key] = event
             while len(self.history) > self.max_history:
                 self.history.popitem(last=False)
+                self.history_evictions += 1
         for q in list(self.subscribers):
             if q.full():
                 self.unsubscribe(q)

@@ -53,5 +53,9 @@ class AudioNormalizer:
             return self.resampler.resample_chunk(np.zeros(0, np.float32), last=True)
         return np.zeros(0, np.float32)
 
+    @property
+    def delay_ms(self):
+        return float(self.resampler.delay())/16 if self.resampler else 0.0
+
 def rms(samples):
     return float(np.sqrt(np.mean(np.square(samples.astype(np.float64))))) if samples.size else 0.0

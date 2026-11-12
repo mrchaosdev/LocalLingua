@@ -9,6 +9,8 @@
    <Grid.RowDefinitions><RowDefinition Height="Auto"/><RowDefinition Height="*"/><RowDefinition Height="Auto"/></Grid.RowDefinitions>
    <DockPanel Grid.Row="0" LastChildFill="True" MouseLeftButtonDown="DragBar_MouseLeftButtonDown">
      <Button DockPanel.Dock="Right" Content="✕" Width="26" Height="24" Background="#32394B" Foreground="White" BorderThickness="0" Click="Close_Click" ToolTip="Close overlay"/>
+     <Button DockPanel.Dock="Right" Name="LockButton" Content="Khóa" Click="Lock_Click" ToolTip="Click-through; Ctrl+Alt+L để mở khóa" Margin="4,0"/>
+     <Button DockPanel.Dock="Right" Content="Màn hình" Click="Monitor_Click" ToolTip="Chuyển sang màn hình kế tiếp" Margin="4,0"/>
      <TextBlock Name="StatusText" Text="● Connecting to local engine..." Foreground="#B0BDF6" FontSize="12" FontWeight="SemiBold" VerticalAlignment="Center"/>
    </DockPanel>
    <TextBlock Grid.Row="1" Name="VietnameseText" Foreground="White" FontSize="24" FontWeight="SemiBold" TextWrapping="Wrap"

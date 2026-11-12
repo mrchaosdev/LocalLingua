@@ -1,36 +1,28 @@
-﻿# Personal development bundle — Windows 11 x64
+﻿# Personal packaging and installation
 
-Status: implementation candidate. No clean-PC/offline installation has been tested. M2 isolation and M3 performance remain release blockers.
+The implementation and user workflow are documented in [16-COMPLETE-IMPLEMENTATION.md](16-COMPLETE-IMPLEMENTATION.md). Packaging has source recipes; no installer binary has been built or accepted in this delivery.
 
-## Prepare a build machine
+## Build prerequisites
 
-Install .NET 10 SDK, Python 3.11, Node >=22.13, VS C++ build tools, CMake and recent Windows SDK. Install engine dependencies in a clean build environment. Run deferred automated tests before treating a bundle as a release. The packaging script builds assets; it does not claim the acceptance gates pass.
-
-From the repository root:
+Windows 11 x64, .NET 10 SDK, Python 3.11, Node >=22.13, Visual Studio C++ build tools, recent Windows SDK, CMake. Install Inno Setup 6 for an installer. Do not downgrade the target framework to match the development laptop.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File scripts/package-personal.ps1
+powershell -ExecutionPolicy Bypass -File scripts/package-personal.ps1 -Installer
 ```
 
-The script creates a NEW timestamped directory under release/, publishes self-contained .NET win-x64 programs, compiles the process helper, freezes the Python engine with PyInstaller and copies offline web assets. It generates BUILD-STATUS.json (unverified) and file checksums. It never replaces an existing release. GPU libraries may require compatible NVIDIA CUDA/cuDNN installation on the target PC. Binary freezing and native loading are unverified.
+Each invocation creates a new timestamped release folder. It builds official Astryx assets, publishes self-contained .NET executables, builds the native process helper, freezes the Python engine including GPU/model-install modules, collects dependency notices/inventories, writes SHA256 hashes and creates a portable ZIP. -Installer additionally invokes Inno Setup for a per-user installer and shortcuts. Existing release folders are not overwritten. The script does not run unit/inference/soak tests.
 
-## Configure the target PC
+Python and .NET are bundled. Compatible NVIDIA driver, CUDA/cuDNN and Ollama remain target-PC prerequisites. Model weights are downloaded separately, once, by an explicit dashboard action or scripts/install-models.ps1. Exact downloaded revisions/hashes/license declarations are stored privately in the model inventory. There are no bundled weights or remote inference calls.
 
-1. Download models once from official sources (docs/02). Record immutable repository revisions, GGUF filename, Ollama digest and licenses in your private model inventory. Do not use mutable tags as release evidence.
-2. Install/start local Ollama. No model weights or Ollama runtime are bundled. Ensure its model is available before disconnecting the internet.
-3. In the bundle's engine/.env use mock/demo first, then copy engine/.env.gpu.example over .env. Set WHISPER_MODEL and VAD_MODEL_PATH to ABSOLUTE local paths. Keep OFFLINE_MODE=1 and OLLAMA_URL=http://127.0.0.1:11434.
-4. Double-click LocalLingua.Launcher.exe. A tray icon starts the engine and native audio host, opens overlay and dashboard. Launching does not start transcription; click Bắt đầu explicitly.
-5. Tray menu opens dashboard/overlay or exits all owned components. A bounded restart policy reports startup failure. Engine shutdown requests model unload; after a grace period, remaining owned processes are terminated. Never terminate unrelated Ollama/Discord processes.
-6. The default capture is Discord process tree; absence/failure of Discord retries visibly and never switches to whole-system capture. Use system diagnostic only by running AudioHost with --system-diagnostic manually.
+## First launch
 
-## Acceptance before use
+Run LocalLingua.Launcher.exe. Its tray menu opens dashboard/overlay, retries failed components, opens the official Ollama installation page or quits all owned components. Capture starts idle. Configure sources/models in the dashboard, install models when needed, restart to apply generated local GPU paths, then click Bắt đầu. Demo is explicitly synthetic.
 
-Run M0–M5 gates on Windows 11, including YouTube exclusion, Discord restart/device changes, 30-minute speech/silence tests, keyboard/DPI/monitor review, no external runtime requests and no files containing audio/transcripts. End-to-end latency requires synchronized audio/capture/render instrumentation, which is still pending. No P50/P95 target is claimed.
+Overlay Ctrl+Alt+L locks/unlocks click-through, Ctrl+Alt+O toggles visibility, Màn hình cycles monitors. Closing the overlay leaves the tray app running; Stop or Pause in the dashboard stops capture. Quit from the tray to stop the application and release models.
 
-## Updates / recovery
+## Updating / rollback
 
-There is no automatic updater or background download. Quit the tray app, keep model files separately, extract a NEW version folder, copy reviewed non-secret configuration, re-run acceptance, then launch. Keep the previous folder for rollback. The runtime generates a temporary token per launcher session; no account credential or Discord token is needed.
+Exit the tray app before replacing application files. Install a new version or extract a new portable folder; retain the old folder for rollback. Preferences, geometry, technical metadata and models are stored under LocalAppData/LocalLingua. The installer leaves this user-owned directory when uninstalling. No transcripts or audio are saved automatically. There is no automatic updater.
 
-## Residual limitations
-
-Unsigned binaries may show Windows warnings. There is no MSIX/installer/signing pipeline. Exact model revision lock, full dependency license notices, clean-machine validation, capture clock synchronization and persistent technical crash diagnostics remain pending. A private development bundle is not a validated redistributable release.
+Binaries are unsigned. Distribution license texts available in the installed dependency packages are collected by the recipe; review generated inventories/missing notices before redistribution. A build or installer cannot certify runtime isolation, GPU compatibility or latency. Those checks were intentionally not run.

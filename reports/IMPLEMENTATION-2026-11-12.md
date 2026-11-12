@@ -42,3 +42,41 @@ Final review: overlay labels mock/demo content explicitly even on status heartbe
 
 ### Publication completed
 Authenticated GitHub account verified as mrchaosdev. Created private repository https://github.com/mrchaosdev/LocalLingua and pushed main successfully. Git reported [new branch] main -> main and configured origin/main tracking. No automated/runtime tests were run; GitHub checks remain manual-only.
+
+## Continuation — v1 code completion, tests explicitly disabled
+
+Owner request: “làm nốt full đi. không cần kiểm thử”, followed by “tiếp đi”. Continued source implementation and publication are authorized. No runtime test, audio capture, AI inference, model download, native build, installer build or benchmark was run.
+
+### M0 / contracts
+- Added binary PCM v2 header, source/QPC calibration, source interval and trace fields in caption contracts.
+- Event WebSocket now receives bounded render acknowledgements; UI history clears/reconnects and immutable finals remain per language.
+
+### M1 / local models
+- Model installer resolves official Whisper/Qwen repositories to immutable revisions, verifies available upstream LFS hashes, saves local SHA256/license inventory and imports local GGUF into Ollama.
+- Silero ONNX/license comes from an immutable commit of the official upstream repository.
+- Added first-run model download action, local dependency/GPU/model diagnostics, preloading and configurable local paths/CPU/CUDA compute.
+- Downloads are explicit, never part of application startup. No downloaded weights or local user configuration enter Git.
+
+### M2 / capture lifecycle
+- AudioHost is now an idle daemon; only Start opens WASAPI/native capture. Pause/Stop cancel the source and preserve already-captured final work.
+- Added source/endpoint/PID controls, local device/root catalog, selected-PID rebind after a unique Discord restart, default-device recovery and no system fallback.
+- Native packets carry sequence, sample position, QPC endpoint and drop/timestamp-validity bits; gaps and timestamp uncertainty are surfaced.
+
+### M3 / realtime
+- Fixed resampler-tail handling, bounded queue drain on pause, worker recovery, cancellation of superseded tentative translation, bounded final queues and no concurrent native ASR.
+- Added actual source-clock mapping, resampler delay accounting, browser/WPF render acknowledgements, first-VI-partial/final-render distributions and 30-minute first/last-window lag instrumentation.
+- Metrics/technical trace export contains no speech/audio, includes real model/GPU/profile metadata when explicitly requested; no measurements are fabricated.
+
+### M4 / complete controls
+- Official Astryx Selector/settings panels, matched current EN/VI, history/search, glossary list/delete and explicit TXT/MD/SRT exports. SRT requires source timestamps; file picker is used where supported.
+- Added WPF global lock/unlock/visibility hotkeys, click-through safety, monitor cycling, remembered geometry, live font/opacity/English preferences and English display when translation is pending/unavailable.
+- Added visible bounded-history eviction count and per-tab token refresh support.
+
+### M5 / distribution and recovery
+- Added per-user Inno Setup installer source, portable ZIP generation, Python/JS/NuGet notice collectors and dependency inventories.
+- Added local Ollama startup/ownership, failed-component retry, abnormal overlay recovery, technical rotating metadata logs without log-message bodies, and robust prerequisite reporting.
+- Rewrote current usage/coverage documentation; older kit documents are explicitly identified as historical.
+
+Static checks in this continuation: TypeScript no-emit compile, Python AST parse, PowerShell parser and Node script syntax checks only. Commands/results are recorded in BUILD_VERIFICATION.md. Tests remain unexecuted, including the updated regression sources. Source coverage is not runtime acceptance. See docs/16-COMPLETE-IMPLEMENTATION.md for the requirement-to-code matrix.
+
+Final static check outputs: TypeScript exit 0; Python AST 28 files; PowerShell parse successful; Node --check successful. No runtime/test command executed. Local Ollama provider additionally validates that the configured model has local GGUF weights and no remote host/model metadata before any subtitle text is submitted. Owned Ollama server disables cloud features.

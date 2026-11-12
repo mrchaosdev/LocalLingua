@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "LocalLingua caption v1",
+  "title": "LocalLingua caption v2",
   "type": "object",
   "required": [
     "type",
@@ -45,6 +45,28 @@
     },
     "created_at_ms": {
       "type": "integer"
+    },
+    "audio_start_ms": {
+      "type": "number"
+    },
+    "audio_end_ms": {
+      "type": "number"
+    },
+    "speech_end_mono_ms": {
+      "type": "number"
+    },
+    "emitted_mono_ms": {
+      "type": "number"
+    },
+    "clock_uncertainty_ms": {
+      "type": "number"
+    },
+    "trace_id": {
+      "type": "string",
+      "maxLength": 150
+    },
+    "clock_calibrated": {
+      "type": "boolean"
     }
   },
   "additionalProperties": true

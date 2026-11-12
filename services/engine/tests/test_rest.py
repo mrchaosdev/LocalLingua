@@ -6,7 +6,7 @@ AUTH={'Authorization':'Bearer '+session_token}
 def test_health_and_control():
     with TestClient(app,base_url='http://127.0.0.1:8765',headers=AUTH) as client:
         assert client.get('/health').json()['ok'] is True
-        assert client.post('/api/control', json={'mode':'start'}).status_code==409
+        assert client.post('/api/control', json={'mode':'start'}).json()['mode']=='start'
         assert client.post('/api/control', json={'mode':'stop'}).json()['mode']=='stop'
 
 def test_demo_ws():

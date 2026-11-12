@@ -1,3 +1,5 @@
+> CURRENT IMPLEMENTATION: the original kit text below is preserved as design/history. Source completion is described in docs/16-COMPLETE-IMPLEMENTATION.md and contracts/audio-frame-v2.md. Runtime acceptance remains unverified by user request.
+
 # Runtime architecture / boundaries
 
 ```mermaid

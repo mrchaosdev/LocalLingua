@@ -30,6 +30,26 @@
         "float32",
         "pcm16"
       ]
+    },
+    "protocol": {
+      "enum": [
+        1,
+        2
+      ]
+    },
+    "source": {
+      "enum": [
+        "system-diagnostic",
+        "discord-process-tree"
+      ]
+    },
+    "clock_offset_ms": {
+      "type": "number"
+    },
+    "clock_uncertainty_ms": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 1000
     }
   },
   "additionalProperties": false

@@ -29,7 +29,9 @@ sealed class Supervisor : ApplicationContext {
         http.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer",token);
         var menu = new ContextMenuStrip();
         menu.Items.Add("Mở bảng phụ đề", null, (_,_) => OpenDashboard());
-        menu.Items.Add("Mở overlay", null, (_,_) => Ensure("LocalLingua.Overlay.exe"));
+        menu.Items.Add("Mở overlay", null, (_,_) => {retries["LocalLingua.Overlay.exe"]=0;Ensure("LocalLingua.Overlay.exe");});
+        menu.Items.Add("Thử khởi động lại thành phần lỗi",null,(_,_)=>retries.Clear());
+        menu.Items.Add("Cài Ollama (trang chính thức)",null,(_,_)=>Process.Start(new ProcessStartInfo("https://ollama.com/download/windows"){UseShellExecute=true}));
         menu.Items.Add("Thoát LocalLingua", null, async (_,_) => await Shutdown());
         tray = new NotifyIcon { Icon = SystemIcons.Application, Text = "LocalLingua · Đang khởi động", ContextMenuStrip = menu, Visible = true };
         tray.DoubleClick += (_,_) => OpenDashboard();
@@ -42,6 +44,7 @@ sealed class Supervisor : ApplicationContext {
         if (retries.GetValueOrDefault(relative) > 5) return;
         if (children.TryGetValue(relative, out var previous)) {
             if (!previous.HasExited) return;
+            TechnicalLog.Write(relative,"process_exited",previous.ExitCode);
             previous.Dispose(); children.Remove(relative);
             retries[relative] = retries.GetValueOrDefault(relative) + 1;
             if (retries[relative] > 5) { tray.Text = "LocalLingua · Lỗi khởi động, kiểm tra cấu hình"; return; }
@@ -51,6 +54,7 @@ sealed class Supervisor : ApplicationContext {
         var start = new ProcessStartInfo(file) { WorkingDirectory = Path.GetDirectoryName(file)!, UseShellExecute = false, CreateNoWindow = true };
         start.Environment["LOCALLINGUA_TOKEN"] = token;
         start.Environment["LOCALLINGUA_WEB_DIR"] = Path.Combine(root,"web");
+        start.Environment["LOCALLINGUA_DATA_DIR"] = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"LocalLingua");
         children[relative] = Process.Start(start) ?? throw new InvalidOperationException("Cannot launch " + relative);
     }
     bool opened;
@@ -59,18 +63,43 @@ sealed class Supervisor : ApplicationContext {
         checking = true;
         try {
             Ensure("engine/LocalLingua.Engine.exe");
-            var response = await http.GetAsync("http://127.0.0.1:8765/api/status");
+            using var response = await http.GetAsync("http://127.0.0.1:8765/api/status");
+            if(closing)return;
             if (!response.IsSuccessStatusCode) { tray.Text = "LocalLingua · Cổng 8765 bị chiếm hoặc sai phiên"; return; }
             Ensure("LocalLingua.AudioHost.exe");
             if (!opened) { Ensure("LocalLingua.Overlay.exe"); OpenDashboard(); opened=true; }
+            else if(children.TryGetValue("LocalLingua.Overlay.exe",out var overlay)&&overlay.HasExited&&overlay.ExitCode!=0)Ensure("LocalLingua.Overlay.exe");
             using var status = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
-            tray.Text = status.RootElement.GetProperty("capture_connected").GetBoolean()
-                ? "LocalLingua · Nguồn audio kết nối; điều khiển trên dashboard"
-                : "LocalLingua · Chưa có nguồn Discord; kiểm tra Discord";
-        } catch { tray.Text = "LocalLingua · Chưa kết nối được engine"; }
+            var state=status.RootElement;
+            if(state.GetProperty("translate_backend").GetString()=="ollama"||state.GetProperty("model_install").GetProperty("state").GetString()=="running")await EnsureOllama();
+            if(closing)return;
+            tray.Text=state.GetProperty("mode").GetString()!="start"?"LocalLingua · Đã dừng thu audio":
+                state.GetProperty("capture_connected").GetBoolean()?"LocalLingua · Đang thu audio và dịch EN → VI":"LocalLingua · Đang chờ nguồn Discord";
+        } catch { if(!closing)tray.Text = "LocalLingua · Chưa kết nối được engine"; }
         finally { checking=false; }
     }
     void OpenDashboard() => Process.Start(new ProcessStartInfo("http://127.0.0.1:8765/#token=" + token) { UseShellExecute=true });
+    async Task EnsureOllama() {
+        if(closing)return;
+        using var local=new HttpClient{Timeout=TimeSpan.FromSeconds(1)};
+        try{using var version=await local.GetAsync("http://127.0.0.1:11434/api/version");if(version.IsSuccessStatusCode)return;}catch(HttpRequestException){}catch(TaskCanceledException){}
+        const string key="owned-ollama";
+        if(closing)return;
+        if(children.TryGetValue(key,out var previous)){
+            if(!previous.HasExited)return;
+            TechnicalLog.Write("owned-ollama","process_exited",previous.ExitCode);
+            previous.Dispose();children.Remove(key);retries[key]=retries.GetValueOrDefault(key)+1;
+        }
+        if(retries.GetValueOrDefault(key)>5)return;
+        var paths=(Environment.GetEnvironmentVariable("PATH")??"").Split(Path.PathSeparator)
+            .Append(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Programs","Ollama"));
+        string? binary=paths.Select(p=>Path.Combine(p,"ollama.exe")).FirstOrDefault(File.Exists);
+        if(binary is null)return;
+        var start=new ProcessStartInfo(binary,"serve"){UseShellExecute=false,CreateNoWindow=true};
+        start.Environment["OLLAMA_HOST"]="127.0.0.1:11434";
+        start.Environment["OLLAMA_NO_CLOUD"]="1";
+        var process=Process.Start(start);if(process is not null)children[key]=process;
+    }
     async Task Shutdown() {
         if (closing) return;
         closing=true; timer.Stop();
