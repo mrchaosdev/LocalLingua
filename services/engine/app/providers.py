@@ -45,10 +45,15 @@ class Transcriber:
 class Translator:
     def __init__(self, settings: Settings):
         self.settings = settings
-        self.client = httpx.AsyncClient(timeout=httpx.Timeout(25.0, connect=3.0))
+        self.client = httpx.AsyncClient(timeout=httpx.Timeout(25.0, connect=3.0), trust_env=False, follow_redirects=False)
         self.glossary: dict[str, str] = {}
 
     async def close(self):
+        if self.settings.translate_backend == 'ollama' and not self.client.is_closed:
+            try:
+                await self.client.post(self.settings.ollama_url.rstrip('/')+'/api/generate',
+                                       json={'model':self.settings.ollama_model,'keep_alive':0},timeout=3)
+            except httpx.HTTPError: pass
         await self.client.aclose()
 
     @staticmethod

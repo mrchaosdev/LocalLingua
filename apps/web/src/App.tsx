@@ -18,7 +18,7 @@ function useLive() {
   const [captions,setCaptions] = useState<Caption[]>([]);
   const [error,setError] = useState('');
   useEffect(() => {
-    let socket: WebSocket, closed = false, retry: number;
+    let socket: WebSocket, closed = false, retry: number, engineSession: string | undefined;
     function connect() {
       socket = new WebSocket(API.replace('http','ws') + '/ws/events');
       socket.onopen = () => socket.send(JSON.stringify({type:'auth',token:sessionToken}));
@@ -27,7 +27,11 @@ function useLive() {
       socket.onmessage = e => {
         let data: Event;
         try {data = JSON.parse(e.data);} catch {return;}
-        if (data.type === 'status') {setConnected(true); setStatus(data); return;}
+        if (data.type === 'status') {
+          if (engineSession && engineSession !== data.session_id) setCaptions([]);
+          engineSession = data.session_id;
+          setConnected(true); setStatus(data); return;
+        }
         if (data.type === 'error') {setError(data.message); return;}
         setCaptions(old => mergeCaption(old,data));
       };

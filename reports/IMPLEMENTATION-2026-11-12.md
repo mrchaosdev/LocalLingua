@@ -28,3 +28,13 @@ Added regression cases for immutable finals per language, slow subscriber gap/re
 Replaced mock navigation and custom dashboard controls with verified official Astryx components (Button, TextInput, Text, Heading, VStack/HStack). Added Vietnamese labels, dark/light mode, audio meter, service-time diagnostics, caption size, Ctrl+Enter shortcut, explicit TXT export and RAM-only glossary hints. Web auth bridge prepared for M5. Overlay: immutable finals, bounded revision state, correct fragmented UTF-8 handling, size +/- and Ctrl+Up/Down opacity, Esc close, PerMonitorV2 manifest.
 
 Not run: browser rendering, Astryx built-asset doctor, screenshot review, accessibility/keyboard, light/dark contrast, overlay multi-monitor / 125-150% DPI. No UI acceptance claim.
+
+## M5
+Implemented random per-session bearer auth, WebSocket first-message auth for browsers, exact Origin/Host checks, single ingest producer, capped subscribers, ingest size/rate limits, HTTP control rate limits and no-store/CSP headers. Local Ollama URLs only, proxy environment disabled, no redirects, model unload on shutdown. Added self-contained .NET tray supervisor candidate, PyInstaller engine entry, native/web/Python packaging recipe and model/offline/update documentation. Fixed broken path characters in original PowerShell launch scripts. Backend serves built local assets; no CDN.
+
+Executed lightweight build/syntax checks (not runtime tests): web TypeScript/Vite build PASS; Astryx doctor 11 pass / 1 warn / 0 fail; Python AST 17 files parsed. All automated/runtime tests remain deferred. Native launcher, frozen engine, CUDA dependency packaging and clean installation are unverified. No installable bundle produced on this laptop. Exact model pin/license inventory and synchronized end-to-end latency instrumentation remain pending.
+
+## GitHub
+Owner explicitly selected mrchaosdev. Connected GitHub plugin account is different and does not expose repository creation, so publication uses Git Credential Manager and GitHub REST/Git. No usable laptop GitHub credential was present; device sign-in requested. Repository defaults private. Publication outcome will be appended after authentication.
+
+Additional deferred regression cases: fragmented-stream resampler equivalence, final queue overflow/pause, stale translation result suppression and auth/origin/local-provider restrictions. GitHub checks are workflow_dispatch-only and will not run on push. PowerShell scripts parsed successfully; scripts were not executed for packaging. README and verification ledger now describe the modified implementation rather than historical kit success.

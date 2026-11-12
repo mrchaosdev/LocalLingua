@@ -41,8 +41,10 @@ class SpeechSession:
         self.closed = False
         self.generation = 0
         self.context = deque(maxlen=2)
-        self.latest = {}
-        self.hypotheses = {}
+        from collections import OrderedDict
+        self.latest = OrderedDict()
+        self.hypotheses = OrderedDict()
+        self.last_partial_sent = 0
         self.timings = {name: deque(maxlen=2000) for name in ('asr_ms', 'translation_ms', 'final_age_ms')}
         self.metrics = dict(frames=0, dropped_samples=0, asr_calls=0, translate_calls=0,
                             asr_ms_last=0, translation_ms_last=0, rms=0, final_overflows=0)
@@ -161,17 +163,23 @@ class SpeechSession:
                 started = time.perf_counter()
                 try: en = (await self.asr.transcribe(job.samples)).strip()
                 except Exception:
-                    self._error('asr_failure'); continue
+                    self._error('asr_failure')
+                    if job.final:
+                        self.hypotheses.pop(job.uid, None)
+                        self.latest.pop(job.uid, None)
+                    continue
                 if job.generation != self.generation or not en: continue
                 elapsed = (time.perf_counter()-started)*1000
                 self._timing('asr_ms', elapsed)
                 self.metrics['asr_ms_last'] = round(elapsed)
                 self.metrics['asr_calls'] += 1
                 self.latest[job.uid] = job.revision
+                while len(self.latest) > 140: self.latest.popitem(last=False)
                 self.hub.publish(caption('transcript.final' if job.final else 'transcript.partial', job.uid,
                                          job.revision, en, source=self.asr.settings.asr_backend))
                 stable = stable_prefix(self.hypotheses.get(job.uid, ''), en)
                 self.hypotheses[job.uid] = en
+                while len(self.hypotheses) > 140: self.hypotheses.popitem(last=False)
                 job.english = en if job.final else stable
                 job.samples = None
                 job.context = tuple(self.context)
@@ -181,7 +189,8 @@ class SpeechSession:
                     self.vi_partial = None
                     self._put_final(self.vi_finals, job)
                     self.vi_wake.set()
-                elif len(stable.split()) >= 5:
+                elif len(stable.split()) >= 5 and time.monotonic()-self.last_partial_sent >= 1.3:
+                    self.last_partial_sent = time.monotonic()
                     self.vi_partial = job
                     self.vi_wake.set()
 
@@ -197,6 +206,7 @@ class SpeechSession:
                     vi = await asyncio.wait_for(self.translator.translate(job.english, list(job.context)), timeout=25)
                 except Exception:
                     self._error('final_translation_failure' if job.final else 'partial_translation_failure')
+                    if job.final: self.latest.pop(job.uid, None)
                     continue
                 if job.generation != self.generation: continue
                 if not job.final and self.latest.get(job.uid) != job.revision: continue

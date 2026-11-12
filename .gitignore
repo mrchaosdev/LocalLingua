@@ -25,3 +25,7 @@ release/
 *.gguf
 *.safetensors
 .DS_Store
+**/.venv-build/
+*.spec
+*.tsbuildinfo
+*.pdb

@@ -1,0 +1,36 @@
+﻿name: Deferred checks (manual only)
+on:
+  workflow_dispatch:
+jobs:
+  engine:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: python -m pip install -r services/engine/requirements.txt
+      - run: python -m pytest -q
+        working-directory: services/engine
+  windows-and-web:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '10.0.x'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: apps/web/package-lock.json
+      - run: npm.cmd ci
+        working-directory: apps/web
+      - run: npm.cmd run build
+        working-directory: apps/web
+      - run: npx.cmd @astryxdesign/cli doctor --built dist
+        working-directory: apps/web
+      - run: dotnet build apps/windows/LocalLingua.AudioHost
+      - run: dotnet build apps/windows/LocalLingua.Overlay
+      - run: dotnet build apps/windows/LocalLingua.Launcher
+      - run: powershell -ExecutionPolicy Bypass -File scripts/build-process-capture.ps1

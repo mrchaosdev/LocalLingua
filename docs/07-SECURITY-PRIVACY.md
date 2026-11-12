@@ -1,3 +1,5 @@
+> IMPLEMENTATION UPDATE 2026-11-12: the sections below describe the original kit. Current code adds session bearer auth, WebSocket auth/Origin checks and native process capture candidates. See BUILD_VERIFICATION.md and reports/IMPLEMENTATION-2026-11-12.md; runtime security/isolation are NOT verified.
+
 # Threat model, privacy and permissions
 
 ## Security goals

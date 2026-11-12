@@ -1,88 +1,63 @@
-# LocalLingua — Windows 11 English → Vietnamese Live Subtitle Translator
+﻿# LocalLingua — EN → VI local subtitles for Windows 11
 
-**SPEC v2.0 | 12/11/2026 | Local-first, single-user, engineering handoff for Codex/Claude**
+Development implementation, **not an accepted realtime release**. This repository contains the original v2 build kit plus sequential M0–M5 implementation commits. The owner deferred tests on the development laptop. See [actual session evidence](reports/IMPLEMENTATION-2026-11-12.md) and [build verification](BUILD_VERIFICATION.md).
 
-> This is a build kit containing product/technical/design documents, agent skills and an implementation scaffold. It is **not** a finished, benchmarked app, installer, or trained AI model. Individual model runtimes, the application-specific Discord capture backend and real-time performance must be verified on the target PC.
+Target: Windows 11 x64, .NET **10**, Python **3.11**, NVIDIA **12 GB VRAM**. Official Astryx 0.7.12 / React 19 dashboard, WPF overlay, native process-loopback capture, faster-whisper small.en and local Ollama Qwen3 4B Q4_K_M. GPU fit and latency remain unmeasured.
 
-## Goal
-While the owner listens to **English speech from Discord desktop on Windows 11**, display **Vietnamese subtitles** with as little delay as possible. Do not require a Discord bot, server administrator permissions, paid cloud API, or an internet connection after local installation/model download.
-
-Personal target machine: Windows 11, **32 GB RAM, NVIDIA GPU with 12 GB VRAM** (exact GPU and driver to verify); no company infrastructure.
-
-## User experience
-1. Launch LocalLingua and the AI service. Open Discord, join a voice channel.
-2. Select source `System loopback (diagnostic)` until process-specific capture passes acceptance; final selector `Discord process tree`.
-3. Click Start. English tentative text and partial Vietnamese text appear, then settle into completed sentences.
-4. Choose one or more views: **Astryx web dashboard** (`localhost:5173` during development), **standalone WPF overlay** (always-on-top), optional future desktop WebView2 wrapper.
-5. Stop, inspect health/latency, optionally export text. Audio/transcript are NOT saved by default.
-
-## Read in order
-- [BUILD_VERIFICATION.md](BUILD_VERIFICATION.md) — honest list of tests performed vs unverified
-- [docs/00-DECISIONS.md](docs/00-DECISIONS.md) — locked decisions and non-goals
-- [docs/01-PRD.md](docs/01-PRD.md) — detailed product scope and UX
-- [docs/02-STACK-AND-MODELS.md](docs/02-STACK-AND-MODELS.md) — all versions, Hugging Face URLs, download instructions
-- [docs/03-ARCHITECTURE.md](docs/03-ARCHITECTURE.md) — components, event contract and dataflow
-- [docs/04-REALTIME-ENGINE.md](docs/04-REALTIME-ENGINE.md) — scheduling, VAD, stability, translation, backpressure
-- [docs/05-DESIGN-ASTRYX.md](docs/05-DESIGN-ASTRYX.md) — design language, component and accessibility rules
-- [docs/06-WINDOWS-CAPTURE.md](docs/06-WINDOWS-CAPTURE.md) — real OS constraints, Discord isolation milestones
-- [docs/07-SECURITY-PRIVACY.md](docs/07-SECURITY-PRIVACY.md)
-- [docs/08-TESTING-BENCHMARK.md](docs/08-TESTING-BENCHMARK.md)
-- [docs/09-IMPLEMENTATION-PLAN.md](docs/09-IMPLEMENTATION-PLAN.md)
-- [docs/10-OPERATIONS.md](docs/10-OPERATIONS.md)
-- [docs/11-CONTRACTS.md](docs/11-CONTRACTS.md)
-- [docs/12-TROUBLESHOOTING.md](docs/12-TROUBLESHOOTING.md)
-- [docs/13-REFERENCES.md](docs/13-REFERENCES.md)
-- [docs/14-AGENT-TASKS.md](docs/14-AGENT-TASKS.md)
-
-## Agent instructions
-Read [AGENTS.md](AGENTS.md) and [CLAUDE.md](CLAUDE.md) first. Reusable procedural skills live under `.agents/skills/`; there are task prompts under `prompts/`. Every milestone is independently testable.
-
-## Scaffold contents / honesty ledger
-| Area | Included | Status |
+| Milestone | Code added | Acceptance |
 |---|---|---|
-| Python FastAPI service | HTTP health/status/control, UI WebSocket, ingest WebSocket, demo event emitter | **scaffold code** |
-| ASR and translation | faster-whisper adapter, Ollama adapter, mock adapter | **code to test locally** |
-| Audio | Windows system output loopback host, sends PCM | **diagnostic only**, not Discord-specific |
-| WPF overlay | topmost, draggable, Vietnamese text + connection state | **starter** |
-| Web UI | React 19 + Astryx neutral theme + live caption dashboard | **starter**; install dependencies |
-| Discord-only process capture | Architecture, Microsoft sample link, acceptance gates | **not yet implemented** — must do M2 |
-| Nemotron streaming ASR | Model link, research decision gate | **not integrated** |
-| 30-min latency performance | Measurement plan and targets | **not measured** |
+| M0 | bounded event snapshot/replay, immutable caption revisions, official Astryx | web compiles; runtime tests deferred |
+| M1 | system diagnostic capture, streaming resampler, offline GPU profile | real audio/AI not run |
+| M2 | native Windows Discord process-tree helper, root discovery/restart | native build and isolation NOT verified; release blocker |
+| M3 | separate bounded workers, VAD, stabilization, generation guards, timing summaries | regression/30-minute soak NOT run |
+| M4 | caption controls, glossary hints, explicit export, overlay controls/DPI | browser/native UX not reviewed |
+| M5 | per-run auth, Origin/Host checks, tray supervisor, packaging script | portable bundle/clean offline installation NOT verified |
 
-## Quick start: Windows PowerShell (development)
-Install: .NET 10 SDK, Python 3.11, Node 22 LTS-compatible version, Git, NVIDIA driver; Ollama and model later.
+No audio or transcripts are written automatically. A transcript is downloaded only when you click export. Demo/mock captions are synthetic. Whole-system audio remains explicitly diagnostic; process capture never falls back to it automatically.
+
+## Development
+
+Read [AGENTS.md](AGENTS.md), [CLAUDE.md](CLAUDE.md), [starting prompt](prompts/START-HERE-FOR-CODEX-CLAUDE.md), then docs/00, docs/04 and docs/09. Task skills are under `.agents/skills/`.
+
+From PowerShell in the project root:
 
 ```powershell
-# 1) Python engine
-cd services/engine
-py -3.11 -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements.txt
-Copy-Item .env.example .env
-python -m uvicorn app.main:app --host 127.0.0.1 --port 8765
-
-# 2) React dashboard (new terminal)
+# Install dependencies separately; startup does not install from the internet.
+powershell -ExecutionPolicy Bypass -File scripts/setup-engine.ps1
 cd apps/web
-npm install
-npm run dev
-# Open http://127.0.0.1:5173 — click Demo (does not need AI)
+npm.cmd ci
+npm.cmd run build
+cd ../..
 
-# 3) Native system-loopback PoC (new terminal): captures ALL device output,
-#    not just Discord; do not use in confidential meetings before isolation test.
-cd apps/windows/LocalLingua.AudioHost
-dotnet restore
-dotnet run
-
-# 4) WPF overlay (optional fourth terminal)
-cd apps/windows/LocalLingua.Overlay
-dotnet run
+# Set the SAME secret in the terminals used for engine, AudioHost and overlay.
+# Prefer a random temporary value; do not commit it or put it in a URL query.
+$env:LOCALLINGUA_TOKEN = [guid]::NewGuid().ToString('N') + [guid]::NewGuid().ToString('N')
+powershell -ExecutionPolicy Bypass -File scripts/run-engine.ps1
+# This displays a local dashboard link with a temporary fragment token.
 ```
 
-For *actual* ASR, run `pip install faster-whisper` in the backend venv and set `ASR_BACKEND=whisper` in `services/engine/.env` and install the CUDA/cuDNN requirements compatible with CTranslate2. For *actual* translation, install Ollama, pull a Qwen 4B local model and set `TRANSLATE_BACKEND=ollama`. **Both start in safe mock/demo mode.** Follow the detailed setup/diagnostics before entering a live meeting.
+In other terminals, set the same `LOCALLINGUA_TOKEN`, then run `scripts/run-overlay.ps1` or `scripts/run-audiohost.ps1 -SystemDiagnostic`. Without `-SystemDiagnostic`, AudioHost expects the native helper alongside its executable. Build it with `scripts/build-process-capture.ps1` (VS C++ tools + recent Windows SDK + CMake); copy the Release helper next to the built AudioHost.
 
-## Immutable product principles
-- A graceful 2–5 second meaning-preserving translation is better than speculative 300ms hallucination.
-- Partial captions may change; finalized captions must not be silently rewritten.
-- If translation falls behind, drop stale **partial** jobs, never silently drop finalized speech.
-- Local mode means no external inference calls, telemetry, CDNs or cloud transcript storage at runtime.
-- No model, latency or VRAM claim without an actual measured run.
+For Vite development use `scripts/run-web.ps1` and open `http://127.0.0.1:5173/#token=<session-token>`. Packaged/production web assets are served by the engine at port 8765. Tokens remain in memory after the fragment is removed from the address bar.
+
+The Start button gates audio processing and requires a connected host. It does not launch the capture executable. The packaged tray launcher manages executables.
+
+## Local AI on the target GPU PC
+
+Follow [model setup](docs/02-STACK-AND-MODELS.md). Run `scripts/setup-engine.ps1 -Gpu`, download the official Whisper checkpoint, Qwen GGUF and optional Silero ONNX model. Copy `services/engine/.env.gpu.example` to `.env` and set **absolute local model paths**. Install CUDA/cuDNN versions compatible with the installed CTranslate2. Offline mode rejects implicit Whisper downloads. Ollama must already be running locally with the exact configured model installed.
+
+The default `.env.example` keeps both backends in mock mode. No cloud inference endpoint is supported. Model weights are excluded from Git and packaging. Record exact model revisions, Ollama digests, licenses and GPU driver before acceptance.
+
+## Tests deferred — commands for the target PC
+
+```powershell
+cd services/engine
+./.venv/Scripts/python.exe -m pytest -q
+cd ../../apps/web
+npm.cmd run build
+npx.cmd @astryxdesign/cli doctor --built dist
+```
+
+Then build the .NET/native projects, perform [M2 isolation acceptance](reports/M2-ISOLATION-ACCEPTANCE.md), and run the tests/benchmarks in [docs/08](docs/08-TESTING-BENCHMARK.md). Syntax/build success does not pass native capture, model inference or latency gates.
+
+For the tray launcher and development bundle, see [personal packaging](docs/15-PERSONAL-RELEASE.md). No installer executable or model is included in this repository.
