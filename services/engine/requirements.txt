@@ -1,0 +1,10 @@
+fastapi>=0.115,<1
+uvicorn[standard]>=0.34,<1
+numpy>=1.26,<3
+scipy>=1.13,<2
+httpx>=0.27,<1
+python-dotenv>=1,<2
+pytest>=8,<10
+# Enable real ASR manually after CUDA compatibility verification:
+# faster-whisper>=1.1,<2
+# py-cpuinfo / silero-vad optional in later milestone

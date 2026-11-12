@@ -1,0 +1,2 @@
+# Agent task M3 — realtime engineering
+Implement VAD hysteresis, partial ASR stable-prefix, bounded queues, stale translation cancellation, finalization and metrics; avoid `translation.final` duplicates. Run a 30-min English recording test; report P50/P95 first VI partial and VI final, GPU VRAM, dropped frames and lag trend. If metric misses, optimize measured bottleneck rather than inventing results.

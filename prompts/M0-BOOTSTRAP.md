@@ -1,0 +1,2 @@
+# Agent task M0 — boot & demo
+Build and test local FastAPI `/health`, `/ws/events`, `/api/demo` using mock source and mock translation. Ensure React dashboard with official Astryx and WPF overlay both display caption, revision states, connected/disconnected status. `pytest` and `npm run build`; Windows dotnet build if available. Fix all errors. Do not integrate models or process-specific capture yet; report absence of access to Windows honestly.

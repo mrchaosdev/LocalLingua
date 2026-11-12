@@ -1,0 +1,2 @@
+# Agent task M2 — P0 release blocker
+Implement `AUDIOCLIENT_ACTIVATION_TYPE_PROCESS_LOOPBACK`, `PROCESS_LOOPBACK_MODE_INCLUDE_TARGET_PROCESS_TREE` using the official Microsoft sample; determine Discord root process tree, recover on restart. Demonstrate (1) YouTube-only output excluded, (2) Discord-only captured, (3) both playing but capture only Discord. Record results. Only after passing, enable `Discord isolated` selection in UI.

@@ -1,0 +1,1 @@
+Follow `AGENTS.md`, `docs/00-DECISIONS.md`, `docs/04-REALTIME-ENGINE.md`, `docs/05-DESIGN-ASTRYX.md`, and milestone gates. Do not upgrade/downgrade frameworks without ADR. Prioritize bounded realtime queues and truthfulness about unverified features.

@@ -1,0 +1,23 @@
+# LocalLingua personal voice privacy
+**/.venv/
+**/node_modules/
+**/dist/
+**/bin/
+**/obj/
+**/__pycache__/
+**/.pytest_cache/
+.env
+**/.env
+*.wav
+*.mp3
+*.flac
+*.ogg
+*.srt
+*.vtt
+*.log
+reports/private/
+transcripts/
+models/
+*.gguf
+*.safetensors
+.DS_Store

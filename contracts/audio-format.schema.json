@@ -1,0 +1,36 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LocalLingua audio format handshake",
+  "type": "object",
+  "required": [
+    "type",
+    "sample_rate",
+    "channels",
+    "sample_format"
+  ],
+  "properties": {
+    "type": {
+      "const": "audio.format"
+    },
+    "sample_rate": {
+      "type": "integer",
+      "enum": [
+        16000,
+        44100,
+        48000
+      ]
+    },
+    "channels": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 8
+    },
+    "sample_format": {
+      "enum": [
+        "float32",
+        "pcm16"
+      ]
+    }
+  },
+  "additionalProperties": false
+}

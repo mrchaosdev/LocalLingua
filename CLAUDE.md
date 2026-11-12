@@ -1,0 +1,2 @@
+# Claude coding agent brief
+Read `AGENTS.md` as the canonical contract. Start with `docs/09-IMPLEMENTATION-PLAN.md` task M0, then continue sequentially. Use skills in `.agents/skills/`. For Astryx run the official CLI `npx @astryxdesign/cli init` in `apps/web`, inspect generated instructions, and preserve this project's domain rules. Report actual commands/test output and blockers; no pretend benchmarks.

@@ -1,0 +1,2 @@
+# Agent task M1 — model & audio baseline
+Proof 1: WASAPI whole-output diagnostic capture sends correct PCM to backend. Proof 2: Whisper small.en transcribes English audio from a permitted fixture; Qwen GGUF Ollama translates to Vietnamese using explicit short output. Record GPU/VRAM/CUDA/cuDNN and time. Do not conflate whole system audio with Discord isolated capture. Do not claim p95 realtime yet.

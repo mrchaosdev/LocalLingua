@@ -1,0 +1,51 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "LocalLingua caption v1",
+  "type": "object",
+  "required": [
+    "type",
+    "phase",
+    "utterance_id",
+    "revision",
+    "is_final",
+    "english",
+    "vietnamese",
+    "created_at_ms"
+  ],
+  "properties": {
+    "type": {
+      "const": "caption"
+    },
+    "phase": {
+      "enum": [
+        "transcript.partial",
+        "transcript.final",
+        "translation.partial",
+        "translation.final"
+      ]
+    },
+    "utterance_id": {
+      "type": "string"
+    },
+    "revision": {
+      "type": "integer",
+      "minimum": 0
+    },
+    "is_final": {
+      "type": "boolean"
+    },
+    "english": {
+      "type": "string"
+    },
+    "vietnamese": {
+      "type": "string"
+    },
+    "source": {
+      "type": "string"
+    },
+    "created_at_ms": {
+      "type": "integer"
+    }
+  },
+  "additionalProperties": true
+}

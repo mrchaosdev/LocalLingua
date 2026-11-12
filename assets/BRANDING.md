@@ -1,0 +1,2 @@
+# Brand asset guidance
+No logo, imported image or font is licensed/transferred by this kit. Create an original LocalLingua symbol (caption bubble + sound wave) rather than copying the Astryx/Meta trademark. Use system UI font stack or properly licensed fonts only. Apply Astryx package components and theme, not visual assets from the Astryx landing page. For screenshots use synthetic EN/VI sample speech, never personal real Discord transcripts.
