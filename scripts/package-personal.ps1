@@ -32,6 +32,7 @@ if ($LASTEXITCODE) { throw 'Build venv failed' }
 $python = Join-Path $venv 'Scripts/python.exe'
 & $python -m pip install -r (Join-Path $engine 'requirements.txt') -r (Join-Path $engine 'requirements-gpu.txt') pyinstaller
 if ($LASTEXITCODE) { throw 'Python dependency install failed' }
+& $python -m pip freeze | Set-Content -Encoding utf8 (Join-Path $Output 'python-dependencies.txt')
 Push-Location $engine
 try {
     & $python -m PyInstaller --noconfirm --clean --onedir --name LocalLingua.Engine --paths . --collect-all uvicorn --collect-all soxr --collect-all faster_whisper --collect-all ctranslate2 --collect-all onnxruntime --distpath (Join-Path $engine 'build/frozen') --workpath (Join-Path $engine 'build/work') --specpath (Join-Path $engine 'build') engine_entry.py

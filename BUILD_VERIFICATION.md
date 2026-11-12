@@ -1,4 +1,4 @@
-﻿# Build / test verification — actual session 2026-11-12
+# Build / test verification — actual session 2026-11-12
 
 The original kit's historical test evidence is preserved in the initial Git commit. It is NOT evidence for the modified implementation.
 
@@ -9,7 +9,7 @@ The original kit's historical test evidence is preserved in the initial Git comm
 - Official Astryx CLI: init, component Button/Card/VStack/Text/TextInput, docs layout.
 - npm.cmd run build: PASS, TypeScript and Vite 6.4.6, 2316 modules transformed. Main JS 526.14 kB; Vite warned about chunk size >500kB.
 - Astryx doctor --built dist: exit 0; 11 pass, 1 warning, 0 failures. Warning: Windows PATH CLI shim identity; commands were invoked with npx.cmd @astryxdesign/cli. Built assets contain Astryx. Source purity and visual correctness were not inspected by this command.
-- Python AST parse: 17 source/test files parsed successfully. This does not import dependencies or execute tests.
+- Python AST parse: 18 source/test files parsed successfully. This does not import dependencies or execute tests.
 
 ## NOT executed
 

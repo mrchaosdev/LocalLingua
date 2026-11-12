@@ -10,6 +10,7 @@ public partial class MainWindow : Window {
     private readonly CancellationTokenSource _stop = new();
     private readonly Dictionary<string,int> _latest = new();
     private readonly HashSet<string> _final = new();
+    private bool _simulated;
     public MainWindow() {
         InitializeComponent();
         Loaded += (_,_) => _ = ConnectLoopAsync();
@@ -59,15 +60,22 @@ public partial class MainWindow : Window {
                         }
                         string vi=root.GetProperty("vietnamese").GetString() ?? "";
                         string en=root.GetProperty("english").GetString() ?? "";
+                        string source=root.GetProperty("source").GetString() ?? "";
+                        _simulated=source is "demo" or "mock";
                         Dispatcher.Invoke(()=>{
                             VietnameseText.Text=vi;EnglishText.Text=en;
-                            StatusText.Text=phase.EndsWith("final")?"● Translation · Final":"◌ Đang dịch · Tentative";
+                            string simulated=source is "demo" or "mock"?" · MÔ PHỎNG":"";
+                            StatusText.Text=(phase.EndsWith("final")?"● Bản dịch hoàn chỉnh":"◌ Đang dịch · Có thể thay đổi")+simulated;
                         });
+                    } else if (typ.GetString()=="status") {
+                        string mode=root.GetProperty("mode").GetString() ?? "stop";
+                        Dispatcher.Invoke(()=>StatusText.Text=(mode=="start"?"● Đang nghe · EN → VI":mode=="pause"?"◌ Tạm dừng":"○ Đã dừng")+(_simulated?" · MÔ PHỎNG":""));
                     } else if (typ.GetString()=="error") {
                         string err=root.TryGetProperty("message",out var m)?m.GetString()??"unknown":"unknown";
                         Dispatcher.Invoke(()=>StatusText.Text="⚠ " + err);
                     }
                 }
+                Dispatcher.Invoke(()=>StatusText.Text="○ Mất kết nối engine · Phụ đề đã cũ");
             } catch(OperationCanceledException) { break; }
               catch(Exception ex) { Dispatcher.Invoke(()=>StatusText.Text="○ Engine disconnected: "+ex.GetType().Name); }
             try { await Task.Delay(1750,_stop.Token); } catch(OperationCanceledException) { break; }
