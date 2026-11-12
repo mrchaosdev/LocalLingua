@@ -1,4 +1,5 @@
-import {useEffect,useRef,useState} from 'react';
+import {useEffect,useState} from 'react';
+import {mergeCaption} from './captions';
 import {Button} from '@astryxdesign/core/Button';
 import type {Caption,Event,Mode,Status} from './types';
 const API='http://127.0.0.1:8765';
@@ -10,7 +11,6 @@ function useLive() {
   const [connected,setConnected]=useState(false);
   const [captions,setCaptions]=useState<Caption[]>([]);
   const [error,setError]=useState('');
-  const order=useRef(new Map<string,number>());
   useEffect(()=>{
     let socket:WebSocket|null=null,closed=false,retry:number|undefined;
     function connect(){
@@ -22,16 +22,7 @@ function useLive() {
         let data:Event;try{data=JSON.parse(e.data);}catch{return;}
         if(data.type==='status'){setStatus(data);return;}
         if(data.type==='error'){setError(`${data.code}: ${data.message}`);return;}
-        // Separate latest revision by phase family (English/VI), allowing EN and VI events of same utterance.
-        const key=`${data.utterance_id}:${data.phase.startsWith('translation')?'vi':'en'}`;
-        const last=order.current.get(key)??-1;
-        if(data.revision<last)return;
-        order.current.set(key,data.revision);
-        setCaptions(old=>{
-          const next=old.filter(x=>!(x.utterance_id===data.utterance_id &&
-             x.phase.startsWith('translation')===data.phase.startsWith('translation')));
-          next.push(data);return next.slice(-70);
-        });
+        setCaptions(old=>mergeCaption(old,data));
       };
     }
     connect();return()=>{closed=true;window.clearTimeout(retry);socket?.close();};

@@ -1,45 +1,52 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 import asyncio
 import time
-import uuid
-from collections import deque
-from typing import Any
+from collections import OrderedDict
 
+PHASES = {'transcript.partial', 'transcript.final', 'translation.partial', 'translation.final'}
 
-def caption(phase: str, utterance_id: str, revision: int, english: str, vietnamese: str = "", source: str = "mock") -> dict:
-    return {
-        "type": "caption", "phase": phase, "utterance_id": utterance_id,
-        "revision": revision, "is_final": phase.endswith(".final"),
-        "english": english, "vietnamese": vietnamese,
-        "created_at_ms": int(time.time() * 1000), "source": source,
-    }
+def caption(phase, utterance_id, revision, english, vietnamese='', source='mock'):
+    if phase not in PHASES or revision < 1:
+        raise ValueError('Invalid caption phase/revision')
+    return dict(type='caption', phase=phase, utterance_id=utterance_id,
+                revision=revision, is_final=phase.endswith('.final'), english=english,
+                vietnamese=vietnamese, created_at_ms=int(time.time()*1000), source=source)
 
 class EventHub:
-    def __init__(self, max_history: int = 70):
+    """Bounded snapshot. Slow subscribers disconnect explicitly and replay on reconnect."""
+    def __init__(self, max_history=70):
         self.subscribers: set[asyncio.Queue] = set()
-        self.history: deque[dict[str, Any]] = deque(maxlen=max_history)
+        self.history = OrderedDict()
+        self.max_history = max_history
 
-    def subscribe(self) -> asyncio.Queue:
-        q: asyncio.Queue = asyncio.Queue(maxsize=150)
+    def subscribe(self):
+        q = asyncio.Queue(maxsize=150)
         self.subscribers.add(q)
         return q
 
-    def unsubscribe(self, q: asyncio.Queue) -> None:
+    def unsubscribe(self, q):
         self.subscribers.discard(q)
 
-    def publish(self, event: dict[str, Any]) -> None:
-        if event.get("type") == "caption":
-            self.history.append(event)
+    def publish(self, event):
+        if event.get('type') == 'caption':
+            key = (event['utterance_id'], event['phase'].split('.')[0])
+            previous = self.history.get(key)
+            if previous and (previous['is_final'] or event['revision'] <= previous['revision']):
+                return
+            self.history[key] = event
+            while len(self.history) > self.max_history:
+                self.history.popitem(last=False)
         for q in list(self.subscribers):
             if q.full():
-                # PoC policy: drop oldest subscriber UI event, never block capture.
-                # Release needs prioritized delivery of final events + reconnect replay.
-                try: q.get_nowait()
-                except asyncio.QueueEmpty: pass
-            try: q.put_nowait(event)
-            except asyncio.QueueFull: pass
+                self.unsubscribe(q)
+                while not q.empty():
+                    q.get_nowait()
+                q.put_nowait({'type': 'error', 'code': 'subscriber_overflow',
+                              'message': 'Caption stream overflow; reconnecting for snapshot.'})
+            else:
+                q.put_nowait(event)
 
-    def replay(self, q: asyncio.Queue) -> None:
-        for event in self.history:
-            if q.full(): break
-            q.put_nowait(event)
+    def replay(self, q):
+        for event in self.history.values():
+            if not q.full():
+                q.put_nowait(event)
