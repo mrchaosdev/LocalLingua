@@ -39,3 +39,6 @@ Owner explicitly selected mrchaosdev. Connected GitHub plugin account is differe
 
 Additional deferred regression cases: fragmented-stream resampler equivalence, final queue overflow/pause, stale translation result suppression and auth/origin/local-provider restrictions. GitHub checks are workflow_dispatch-only and will not run on push. PowerShell scripts parsed successfully; scripts were not executed for packaging. README and verification ledger now describe the modified implementation rather than historical kit success.
 Final review: overlay labels mock/demo content explicitly even on status heartbeats and marks disconnected captions as stale. Final syntax parse covers 18 Python files and all PowerShell scripts; git diff --check passed. These are static checks, not acceptance tests.
+
+### Publication completed
+Authenticated GitHub account verified as mrchaosdev. Created private repository https://github.com/mrchaosdev/LocalLingua and pushed main successfully. Git reported [new branch] main -> main and configured origin/main tracking. No automated/runtime tests were run; GitHub checks remain manual-only.
