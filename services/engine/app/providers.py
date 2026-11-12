@@ -9,6 +9,7 @@ class Transcriber:
     def __init__(self, settings: Settings):
         self.settings = settings
         self._model = None
+        self._guard = asyncio.Lock()
 
     def _load_whisper(self):
         if self._model is None:
@@ -17,6 +18,7 @@ class Transcriber:
                 self.settings.whisper_model,
                 device=self.settings.whisper_device,
                 compute_type=self.settings.whisper_compute,
+                local_files_only=self.settings.offline_mode,
             )
         return self._model
 
@@ -31,7 +33,14 @@ class Transcriber:
         return " ".join(s.text.strip() for s in segments).strip()
 
     async def transcribe(self, samples: np.ndarray) -> str:
-        return await asyncio.to_thread(self._infer, samples.copy())
+        # Shield the native call: coroutine cancellation must not unlock while CUDA still runs.
+        async with self._guard:
+            task = asyncio.create_task(asyncio.to_thread(self._infer, samples.copy()))
+            try:
+                return await asyncio.shield(task)
+            except asyncio.CancelledError:
+                await task
+                raise
 
 class Translator:
     def __init__(self, settings: Settings):

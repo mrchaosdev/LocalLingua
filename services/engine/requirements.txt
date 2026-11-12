@@ -8,3 +8,4 @@ pytest>=8,<10
 # Enable real ASR manually after CUDA compatibility verification:
 # faster-whisper>=1.1,<2
 # py-cpuinfo / silero-vad optional in later milestone
+soxr>=0.5,<2

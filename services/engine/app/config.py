@@ -8,6 +8,7 @@ except ImportError:
 
 @dataclass(frozen=True)
 class Settings:
+    offline_mode: bool = os.getenv("OFFLINE_MODE", "1") == "1"
     asr_backend: str = os.getenv("ASR_BACKEND", "mock").lower()
     translate_backend: str = os.getenv("TRANSLATE_BACKEND", "mock").lower()
     whisper_model: str = os.getenv("WHISPER_MODEL", "small.en")
