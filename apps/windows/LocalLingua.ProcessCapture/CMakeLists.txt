@@ -1,0 +1,6 @@
+﻿cmake_minimum_required(VERSION 3.24)
+project(LocalLinguaProcessCapture LANGUAGES CXX)
+add_executable(LocalLingua.ProcessCapture main.cpp)
+target_compile_features(LocalLingua.ProcessCapture PRIVATE cxx_std_20)
+target_compile_definitions(LocalLingua.ProcessCapture PRIVATE UNICODE _UNICODE WIN32_LEAN_AND_MEAN NOMINMAX)
+target_link_libraries(LocalLingua.ProcessCapture PRIVATE mmdevapi ole32)

@@ -15,3 +15,6 @@ Pending: pytest, browser/demo rendering, native build and overlay DPI. These hav
 + System capture now uses 40ms frames, 800ms bounded queue, eviction counter, stale-frame rejection, connection timeout/retry and WAVEFORMATEXTENSIBLE support.
 
 Not run: audio diagnostic 10 minutes, WAV ASR, Qwen inference, CUDA/VRAM verification. M1 gate remains pending.
+
+## M2
+Native process-tree helper and AudioHost supervision implemented. See M2-ISOLATION-ACCEPTANCE.md. Native build, Microsoft sample proof, Discord/YouTube exclusion and restart/device tests all NOT RUN. M2 is a hard release blocker. Subsequent commits are implementation work only; no promotion through acceptance gates.

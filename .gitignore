@@ -18,6 +18,10 @@
 reports/private/
 transcripts/
 models/
+**/build/
+release/
+.runtime/
+*.zip
 *.gguf
 *.safetensors
 .DS_Store

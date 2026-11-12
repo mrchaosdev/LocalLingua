@@ -8,12 +8,45 @@ using NAudio.Wave;
 using var stop = new CancellationTokenSource();
 Console.CancelKeyPress += (_, e) => { e.Cancel = true; stop.Cancel(); };
 var token = Environment.GetEnvironmentVariable("LOCALLINGUA_TOKEN") ?? "";
-Console.WriteLine("LocalLingua: WHOLE SYSTEM diagnostic. Includes every application on default output.");
+bool systemDiagnostic = args.Contains("--system-diagnostic");
+Console.WriteLine(systemDiagnostic ? "WHOLE SYSTEM diagnostic: includes all applications." :
+    "Discord process tree: implementation pending isolation acceptance. No automatic system fallback.");
 while (!stop.IsCancellationRequested) {
-    try { await Capture(stop.Token); }
+    try {
+        if (systemDiagnostic) await Capture(stop.Token);
+        else await ProcessCapture(stop.Token);
+    }
     catch (OperationCanceledException) when (stop.IsCancellationRequested) { break; }
     catch (Exception e) { Console.Error.WriteLine($"Capture disconnected: {e.GetType().Name}. Retrying."); }
     try { await Task.Delay(2000, stop.Token); } catch (OperationCanceledException) { break; }
+}
+
+async Task ProcessCapture(CancellationToken ct) {
+    string helper = Path.Combine(AppContext.BaseDirectory, "LocalLingua.ProcessCapture.exe");
+    if (!File.Exists(helper)) throw new FileNotFoundException("Build/package the native process helper first", helper);
+    using var ws = new ClientWebSocket();
+    ws.Options.SetRequestHeader("Authorization", "Bearer " + token);
+    using var deadline = CancellationTokenSource.CreateLinkedTokenSource(ct);
+    deadline.CancelAfter(TimeSpan.FromSeconds(5));
+    await ws.ConnectAsync(new Uri("ws://127.0.0.1:8765/ws/ingest"), deadline.Token);
+    await ws.SendAsync(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new {
+        type = "audio.format", sample_rate = 44100, channels = 2, sample_format = "pcm16", source = "discord-process-tree"
+    })), WebSocketMessageType.Text, true, ct);
+    using var native = Process.Start(new ProcessStartInfo(helper) {
+        UseShellExecute = false, RedirectStandardOutput = true, CreateNoWindow = true
+    }) ?? throw new InvalidOperationException("Cannot start native capture");
+    try {
+        var bytes = new byte[7056]; // 40 ms stereo PCM16
+        while (!ct.IsCancellationRequested) {
+            await native.StandardOutput.BaseStream.ReadExactlyAsync(bytes, ct);
+            using var send = CancellationTokenSource.CreateLinkedTokenSource(ct);
+            send.CancelAfter(TimeSpan.FromMilliseconds(800));
+            await ws.SendAsync(bytes, WebSocketMessageType.Binary, true, send.Token);
+        }
+    } finally {
+        if (!native.HasExited) native.Kill(entireProcessTree: true);
+        ws.Abort();
+    }
 }
 
 async Task Capture(CancellationToken ct) {
